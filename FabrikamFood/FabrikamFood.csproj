@@ -113,6 +113,10 @@
   <ItemGroup>
     <Content Include="default.htm" />
     <Content Include="Global.asax" />
+    <Content Include="Images\BeefMushroom.jpg" />
+    <Content Include="Images\Salad.jpg" />
+    <Content Include="Images\Skewers.jpg" />
+    <Content Include="Images\Steak.jpg" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
@@ -127,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
+    <None Include="Properties\PublishProfiles\FabrikamButlerBot - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

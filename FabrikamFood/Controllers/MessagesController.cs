@@ -23,6 +23,8 @@ namespace FabrikamFood
             {
                 ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
 
+                var userTxt = activity.Text;
+
                 //To use with personalizing messages for users
                 StateClient stateClient = activity.GetStateClient();
                 BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
@@ -30,14 +32,16 @@ namespace FabrikamFood
                 //Authenticate user, use this information to set personalized info for delivery status and address
 
                 //Allow user to view and order meals
-                
+                //Creating cards for the first time to give better visual output
+               
+
                 //Use Cognitive recommendations API for drinks
 
                 //Get user delivery address and use Maps API to check if in Redmond
 
                 //Stimulate pay and update DB
 
-                Activity reply = activity.CreateReply($"You sent {activity.Text}");
+                Activity reply = activity.CreateReply($"You sent {userTxt}");
                 await connector.Conversations.ReplyToActivityAsync(reply);
             }
             else
