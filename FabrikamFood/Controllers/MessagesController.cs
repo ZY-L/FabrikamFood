@@ -8,6 +8,7 @@ using System.Web.Http.Description;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using FabrikamFood.Models;
 
 namespace FabrikamFood
 {
@@ -31,51 +32,67 @@ namespace FabrikamFood
                 BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
 
                 //Authenticate user, use this information to set personalized info for delivery status and address
+                Activity replyToConversation = activity.CreateReply("Should go to conversation, sign-in card");
+                replyToConversation.Recipient = activity.From;
+                replyToConversation.Type = "message";
+                replyToConversation.Attachments = new List<Attachment>();
+                List<CardAction> cardButtons = new List<CardAction>();
+                
+                SigninCard plCard = new SigninCard(text: "You need to authorize me", buttons: cardButtons);
+                Attachment plAttachment = plCard.ToAttachment();
+                replyToConversation.Attachments.Add(plAttachment);
+                var reply = await connector.Conversations.SendToConversationAsync(replyToConversation);
 
                 //Allow user to view and order meals
-                //Creating cards for the first time to give better visual output
                 if (userTxt.ToLower().Equals("view menu"))
                 {
 
-                    Activity replyToConversation = activity.CreateReply("");
+                    replyToConversation = activity.CreateReply("");
                     replyToConversation.Recipient = activity.From;
                     replyToConversation.Type = "message";
                     replyToConversation.AttachmentLayout = AttachmentLayoutTypes.Carousel;
                     replyToConversation.Attachments = new List<Attachment>();
-                    Dictionary<string, string> cardImageList = new Dictionary<string, string>();
-                    cardImageList.Add("Southwest Steak & Salad", "https://raw.githubusercontent.com/ZY-L/FabrikamFood/Menu/FabrikamFood/Images/Steak.jpg");
-                    cardImageList.Add("Beef & Mushroom Bowl", "https://raw.githubusercontent.com/ZY-L/FabrikamFood/Menu/FabrikamFood/Images/BeefMushroom.jpg");
-                    cardImageList.Add("Mediterrenean Salad", "https://raw.githubusercontent.com/ZY-L/FabrikamFood/Menu/FabrikamFood/Images/Salad.jpg");
-                    cardImageList.Add("Marinated Chicken & Veggie Kabobs", "https://raw.githubusercontent.com/ZY-L/FabrikamFood/Menu/FabrikamFood/Images/Skewers.jpg");
-                    Dictionary<string, string> cardTextList = new Dictionary<string, string>();
-                    cardTextList.Add("Southwest Steak & Salad", "Hand-sliced ethical choice top sirloin with corn, black bean & red pepper salsa, mixed greens and crispy tortilla strips with our light cilantro ranch dressing.");
-                    cardTextList.Add("Beef & Mushroom Bowl", "Marinated Meyer Natural Angus beef with button mushrooms, peas, roasted carrots, brown rice, bread crumbs, and our velvety potato mushroom sauce.");
-                    cardTextList.Add("Mediterrenean Salad", "Chickpeas, cucumber, roasted red pepper, kalamata olives, whole grain croutons, and crumbled feta over romaine with our Mediterranean vinaigrette.");
-                    cardTextList.Add("Marinated Chicken & Veggie Kabobs", "Grilled skewers with natural chicken breast, red pepper, zucchini, and red onion in our Mediterranean marinade. Served over carrot and chickpea bulgur wheat with sundried tomato dressing.");
-                    foreach (KeyValuePair<string, string> cardContent in cardImageList)
+                    List<Item> food = new List<Item>();
+                    food.Add(new Item("Southwest Steak & Salad",
+                                      "Hand-sliced ethical choice top sirloin with corn, black bean & red pepper salsa, mixed greens and crispy tortilla strips with our light cilantro ranch dressing.",
+                                      "https://raw.githubusercontent.com/ZY-L/FabrikamFood/Menu/FabrikamFood/Images/Steak.jpg",
+                                      10.50));
+                    food.Add(new Item("Beef & Mushroom Bowl",
+                                      "Marinated Meyer Natural Angus beef with button mushrooms, peas, roasted carrots, brown rice, bread crumbs, and our velvety potato mushroom sauce.",
+                                      "https://raw.githubusercontent.com/ZY-L/FabrikamFood/Menu/FabrikamFood/Images/BeefMushroom.jpg",
+                                      9.50));
+                    food.Add(new Item("Mediterrenean Salad",
+                                      "Chickpeas, cucumber, roasted red pepper, kalamata olives, whole grain croutons, and crumbled feta over romaine with our Mediterranean vinaigrette.",
+                                      "https://raw.githubusercontent.com/ZY-L/FabrikamFood/Menu/FabrikamFood/Images/Salad.jpg",
+                                      8.00));
+                    food.Add(new Item("Marinated Chicken & Veggie Kabobs",
+                                      "Grilled skewers with natural chicken breast, red pepper, zucchini, and red onion in our Mediterranean marinade. Served over carrot and chickpea bulgur wheat with sundried tomato dressing.",
+                                      "https://raw.githubusercontent.com/ZY-L/FabrikamFood/Menu/FabrikamFood/Images/Skewers.jpg",
+                                      6.50));
+                    foreach (Item product in food)
                     {
                         List<CardImage> cardImages = new List<CardImage>();
-                        cardImages.Add(new CardImage(url: cardContent.Value));
-                        List<CardAction> cardButtons = new List<CardAction>();
-                        CardAction plButton = new CardAction()
+                        cardImages.Add(new CardImage(url: product.image));
+                        List<CardAction> menuButtons = new List<CardAction>();
+                        CardAction buyButton = new CardAction()
                         {
-                            Value = $"https://en.wikipedia.org/wiki/{cardContent.Key}",
-                            Type = "openUrl",
-                            Title = "WikiPedia Page"
+                            Value = $"Buy {product.id}",
+                            Type = "postBack",
+                            Title = $"Buy for ${product.price}"
                         };
-                        cardButtons.Add(plButton);
-                        HeroCard plCard = new HeroCard()
+                        menuButtons.Add(buyButton);
+                        HeroCard itemCard = new HeroCard()
                         {
-                            Title = $"{cardContent.Key}",
-                            Subtitle = $"{cardTextList[cardContent.Key]}",
+                            Title = $"{product.id}",
+                            Subtitle = $"{product.description}",
                             Images = cardImages,
-                            Buttons = cardButtons
+                            Buttons = menuButtons
                         };
-                        Attachment plAttachment = plCard.ToAttachment();
+                        plAttachment = plCard.ToAttachment();
                         replyToConversation.Attachments.Add(plAttachment);
                     }
                     replyToConversation.AttachmentLayout = AttachmentLayoutTypes.Carousel;
-                    var reply2 = await connector.Conversations.SendToConversationAsync(replyToConversation);
+                    var menureply = await connector.Conversations.SendToConversationAsync(replyToConversation);
       
                     return Request.CreateResponse(HttpStatusCode.OK);
 
@@ -85,10 +102,14 @@ namespace FabrikamFood
 
                 //Get user delivery address and use Maps API to check if in Redmond
 
-                //Stimulate pay and update DB
+                //Stimulate pay, update DB and print receipt
 
-                Activity reply = activity.CreateReply($"You sent {userTxt}");
-                await connector.Conversations.ReplyToActivityAsync(reply);
+
+
+
+                Activity replylast = activity.CreateReply($"You sent {userTxt}");
+                await connector.Conversations.ReplyToActivityAsync(replylast
+                    );
             }
             else
             {
