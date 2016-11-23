@@ -38,6 +38,7 @@ namespace FabrikamFood
                 replyToConversation.Attachments = new List<Attachment>();
                 List<CardAction> cardButtons = new List<CardAction>();
                 
+
                 SigninCard plCard = new SigninCard(text: "You need to authorize me", buttons: cardButtons);
                 Attachment plAttachment = plCard.ToAttachment();
                 replyToConversation.Attachments.Add(plAttachment);
