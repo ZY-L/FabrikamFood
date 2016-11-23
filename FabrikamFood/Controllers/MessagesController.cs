@@ -22,11 +22,22 @@ namespace FabrikamFood
             if (activity.Type == ActivityTypes.Message)
             {
                 ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-                // calculate something for us to return
-                int length = (activity.Text ?? string.Empty).Length;
 
-                // return our reply to the user
-                Activity reply = activity.CreateReply($"You sent {activity.Text} which was {length} characters");
+                //To use with personalizing messages for users
+                StateClient stateClient = activity.GetStateClient();
+                BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
+
+                //Authenticate user, use this information to set personalized info for delivery status and address
+
+                //Allow user to view and order meals
+                
+                //Use Cognitive recommendations API for drinks
+
+                //Get user delivery address and use Maps API to check if in Redmond
+
+                //Stimulate pay and update DB
+
+                Activity reply = activity.CreateReply($"You sent {activity.Text}");
                 await connector.Conversations.ReplyToActivityAsync(reply);
             }
             else
