@@ -11,13 +11,15 @@ namespace FabrikamFood.Models
         public string description { get; set; }
         public string image { get; set; }
         public double price { get; set; }
+        public int available { get; set; }
 
-        public Item(string id, string description, string image, double price)
+        public Item(string id, string description, string image, double price, int available)
         {
             this.id = id;
             this.description = description;
             this.image = image;
             this.price = price;
+            this.available = available;
         }
     }
 
