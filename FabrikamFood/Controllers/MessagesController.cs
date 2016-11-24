@@ -124,10 +124,86 @@ namespace FabrikamFood
                     }
                 }
 
-                //Check if deliver address is in Redmond using Maps API
+                //Check if delivery address is in Redmond using Google Geolocation API
+                if (char.IsDigit(userTxt[0]))
+                {
+                    List<String> addressElements = userTxt.Split(' ').ToList();
+                    string uri = "";
+                    foreach(String element in addressElements)
+                    {
+                        uri += element;
+                        uri += "+";
+                    }
+                    uri = uri.TrimEnd('+');
+
+                    AddressObject.RootObject root;
+                    HttpClient client = new HttpClient();
+                    string x = await client.GetStringAsync(new Uri("https://maps.googleapis.com/maps/api/geocode/json?address=" + uri + "&key=AIzaSyBkKQAw4mvqPpJvG-aYo5usC8G0P8AkS28"));
+                    root = JsonConvert.DeserializeObject<AddressObject.RootObject>(x);
+
+                    List<AddressObject.Result> results = root.results;
+                    Boolean check_address = false;
+                    int index = 0;
+                    foreach(AddressObject.Result entry in results)
+                    {
+                        check_address = entry.formatted_address.Contains("Redmond");
+                        index += 1;
+                    }
+                       
+                    //Activity reply2 = activity.CreateReply($"You've just entered a {check_address} address {index}");
+                    //await connector.Conversations.ReplyToActivityAsync(reply2);
+
+                    if (check_address)
+                    {
+                        Activity success = activity.CreateReply("");
+                        success.Recipient = activity.From;
+                        success.Type = "message";
+                        success.Attachments = new List<Attachment>();
+                        List<CardImage> cardImages = new List<CardImage>();
+                        cardImages.Add(new CardImage(url: "https://raw.githubusercontent.com/ZY-L/FabrikamFood/master/FabrikamFood/Images/success.jpg"));
+                       
+                        List<CardAction> cardButtons = new List<CardAction>();
+                        CardAction plButton = new CardAction()
+                        {
+                            Value = "purchase",
+                            Type = "postBack",
+                            Title = "Pay via credit card"
+                        };
+                        cardButtons.Add(plButton);
+                        HeroCard plCard = new HeroCard()
+                        {
+                            Title = "Very good, sir.",
+                            Subtitle = "Your meal shall arrive shortly, let us proceed with the payment.",
+                            Images = cardImages,
+                            Buttons = cardButtons
+                        };
+                        Attachment plAttachment = plCard.ToAttachment();
+                        success.Attachments.Add(plAttachment);
+                        var deliveryreply = await connector.Conversations.SendToConversationAsync(success);
+                        return Request.CreateResponse(HttpStatusCode.OK);
+                    }
+                    else
+                    {
+                        Activity fail = activity.CreateReply("Apologies sir, I cannot deliver to that address.");
+                        await connector.Conversations.ReplyToActivityAsync(fail);
+                    }
+
+
+                    
+
+                    //AddressObject.Location city;
+                    //HttpClient client = new HttpClient();
+                    //string x = await client.GetStringAsync(new Uri("https://maps.googleapis.com/maps/api/geocode/json?address=" + address + "&key=AIzaSyBkKQAw4mvqPpJvG-aYo5usC8G0P8AkS28"));
+                    //city = JsonConvert.DeserializeObject<AddressObject.Location>(x);
+
+                }
+
+                //Calculate delivery distance and hence time with Google Distance Matrix API
 
 
                 //Stimulate pay, update DB and print receipt
+
+                //Remember to add checks for if address valid and stuff in shopping cart
 
                 if (userTxt.ToLower().Equals("purchase"))
                 {
